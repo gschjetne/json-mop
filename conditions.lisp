@@ -25,11 +25,13 @@
              (format stream "Slot ~A has no JSON metadata associated with it."
                      (slot-name condition)))))
 
-(define-condition null-value (error)
+(define-condition json-type-error (error)
   ((json-type :initarg :json-type
               :reader json-type)))
 
-(define-condition null-in-homogenous-sequence (null-value)
+(define-condition null-value (json-type-error) ())
+
+(define-condition null-in-homogenous-sequence (json-type-error) ()
   (:report (lambda (condition stream)
              (format stream "null encountered in a homogenous sequence of type ~S"
                      (json-type condition)))))
