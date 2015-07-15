@@ -33,15 +33,17 @@
              :initform nil
              :reader json-key-name)
    (json-type :initarg :json-type
-              :initform :object
+              :initform :any
               :reader json-type)))
+
+(defmethod json-key-name ((slot closer-mop:standard-direct-slot-definition))
+  (warn 'slot-not-serializable
+        :slot-name (closer-mop:slot-definition-name slot)))
 
 (defmethod closer-mop:direct-slot-definition-class ((class json-serializable)
                                                     &rest initargs)
   (declare (ignore class initargs))
   (find-class 'json-serializable-slot))
-
-(define-condition null-value (error) ())
 
 (defun to-json-value (value slot)
   (ecase (json-type slot)
@@ -53,27 +55,70 @@
     (:bool (check-type value boolean)
      (if value 'true 'false))))
 
-(defun to-lisp-value (value slot)
-  (when (eql value :null)
-    (error 'null-value))
-  (let ((json-type (json-type slot)))
-    (etypecase json-type
-      (keyword
-       (ecase json-type
-         (:string (check-type value string) value)
-         (:number (check-type value number) value)
-         (:object value)
-         (:vector (check-type value vector) value)
-         (:list (coerce value 'list))
-         (:bool (ecase value
-                  (true t)
-                  (false nil)))))
-      (symbol (hash-to-object value json-type)))))
+(defgeneric to-lisp-value (value json-type)
+  (:documentation
+   "Turns a value passed by Yason into the appropriate
+  Lisp type as specified by JSON-TYPE"))
 
-(define-condition no-values-parsed (warning) ())
+(defmethod to-lisp-value ((value (eql :null)) json-type)
+  "When the value is JSON null, signal NULL-VALUE error"
+  (declare (ignore value))
+  (error 'null-value :json-type json-type))
 
-(defun hash-to-object (hash class &rest initargs)
-  (check-type hash hash-table)
+(defmethod to-lisp-value (value (json-type (eql :any)))
+  "When the JSON type is :ANY, Pass the VALUE unchanged"
+  (declare (ignore json-type)) value)
+
+(defmethod to-lisp-value ((value string) (json-type (eql :string)))
+  "Return the string VALUE"
+  (declare (ignore json-type)) value)
+
+(defmethod to-lisp-value ((value number) (json-type (eql :number)))
+  "Return the number VALUE"
+  (declare (ignore json-type)) value)
+
+(defmethod to-lisp-value ((value hash-table) (json-type (eql :hash-table)))
+  "Return the hash-table VALUE"
+  (declare (ignore json-type)) value)
+
+(defmethod to-lisp-value ((value vector) (json-type (eql :vector)))
+  "Return the vector VALUE"
+  (declare (ignore json-type)) value)
+
+(defmethod to-lisp-value ((value vector) (json-type (eql :list)))
+  "Return the list VALUE"
+  (declare (ignore json-type)) (coerce value 'list))
+
+(defmethod to-lisp-value (value (json-type (eql :bool)))
+  "Return the boolean VALUE"
+  (declare (ignore json-type))
+  (ecase value (true t) (false nil)))
+
+(defmethod to-lisp-value ((value vector) (json-type cons))
+  "Return the homogenous sequence VALUE"
+  (map (ecase (first json-type)
+         (:vector 'vector)
+         (:list 'list))
+       (lambda (item)
+         (handler-case (to-lisp-value item (second json-type))
+           (null-value (condition)
+             (declare (ignore condition))
+             (restart-case (error 'null-in-homogenous-sequence
+                                  :json-type json-type)
+               (use-value (value)
+                 :report "Specify a value to use in place of the null"
+                 :interactive (lambda () (format *query-io* "Eval: ")
+                                (list (eval (read *query-io*))))
+                 value)))))
+       value))
+
+(defmethod to-lisp-value ((value hash-table) (json-type symbol))
+  "Return the CLOS object VALUE"
+  (json-to-clos value json-type))
+
+(defgeneric json-to-clos (input class &rest initargs))
+
+(defmethod json-to-clos ((input hash-table) class &rest initargs)
   (let ((lisp-object (apply #'make-instance class initargs))
         (key-count 0))
     (loop for slot in (closer-mop:class-direct-slots (find-class class))
@@ -82,21 +127,31 @@
                    (progn
                      (setf (slot-value lisp-object
                                        (closer-mop:slot-definition-name slot))
-                           (to-lisp-value (gethash it hash :null) slot))
+                           (to-lisp-value (gethash it input :null)
+                                          (json-type slot)))
                      (incf key-count))
                  (null-value (condition)
                    (declare (ignore condition)) nil))))
-    (when (zerop key-count) (warn 'no-values-parsed))
+    (when (zerop key-count) (warn 'no-values-parsed
+                                  :hash-table input
+                                  :class-name class))
     (values lisp-object key-count)))
 
-(defun parse-as (input class &rest initargs)
-  (apply #'hash-to-object
+(defmethod json-to-clos ((input stream) class &rest initargs)
+  (apply #'json-to-clos
          (parse input
                       :object-as :hash-table
                       :json-arrays-as-vectors t
                       :json-booleans-as-symbols t
                       :json-nulls-as-keyword t)
          class initargs))
+
+(defmethod json-to-clos ((input pathname) class &rest initargs)
+  (with-open-file (stream input)
+    (apply #'json-to-clos stream class initargs)))
+
+(defmethod json-to-clos ((input string) class &rest initargs)
+  (apply #'json-to-clos (make-string-input-stream input) class initargs))
 
 (defclass test-class ()
   ((string :initarg :string
@@ -105,9 +160,9 @@
    (number :initarg :number
            :json-type :number
            :json-key "number")
-   (object :initarg :object
-           :json-type :object
-           :json-key "object")
+   (hash :initarg :object
+           :json-type :hash-table
+           :json-key "hash")
    (vector :initarg :vector
            :json-type :vector
            :json-key "vector")
@@ -119,5 +174,8 @@
          :json-key "bool")
    (test-class :initarg :test-class
                :json-type test-class
-               :json-key "test_object"))
+               :json-key "test_object")
+   (homogenous-list :initarg :homgenous-list
+                    :json-type (:vector :number)
+                    :json-key "homo"))
   (:metaclass json-serializable))

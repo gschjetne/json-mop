@@ -25,4 +25,5 @@
                #:anaphora)
   :serial t
   :components ((:file "package")
+               (:file "conditions")
                (:file "json-mop")))
