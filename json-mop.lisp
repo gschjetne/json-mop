@@ -42,3 +42,8 @@
                                                     &rest initargs)
   (declare (ignore class initargs))
   (find-class 'json-serializable-slot))
+
+(defclass json-serializable-mixin () ())
+
+(defmethod closer-mop:compute-class-precedence-list ((class json-serializable))
+  (cons (find-class 'json-serializable-mixin) (call-next-method class)))

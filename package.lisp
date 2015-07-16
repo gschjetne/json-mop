@@ -22,11 +22,26 @@
                 #:true
                 #:false
                 #:parse
-                #:encode-object
-                #:encode-slots)
+                #:encode
+                #:encode-array-element
+                #:encode-object-element
+                #:with-output
+                #:with-array
+                #:with-object)
   (:import-from #:anaphora
                 #:awhen
                 #:it)
   (:export #:json-serializable
-           #:hash-to-object
-           #:parse-as))
+           #:to-lisp-value
+           #:to-json-value
+           #:json-to-clos
+           ;; Conditions
+           #:slot-not-serializable
+           #:slot-name
+           #:json-type-error
+           #:json-type
+           #:null-value
+           #:null-in-homogenous-sequence
+           #:no-values-parsed
+           #:no-values-hash-table
+           #:no-values-class))

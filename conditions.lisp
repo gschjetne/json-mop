@@ -25,6 +25,9 @@
              (format stream "Slot ~A has no JSON metadata associated with it."
                      (slot-name condition)))))
 
+;; TODO: inherit TYPE-ERROR and change all occurences to specify
+;; :expected-type, likewise change relevant occurrences of TYPE-ERROR
+;; to JSON-TYPE-ERROR
 (define-condition json-type-error (error)
   ((json-type :initarg :json-type
               :reader json-type)))
@@ -46,3 +49,6 @@
                      (no-values-class condition)
                      (no-values-hash-table condition)))))
 
+(defun read-eval-query ()
+  (format *query-io* "Eval: ")
+  (list (eval (read *query-io*))))

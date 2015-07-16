@@ -70,8 +70,7 @@
                                   :json-type json-type)
                (use-value (value)
                  :report "Specify a value to use in place of the null"
-                 :interactive (lambda () (format *query-io* "Eval: ")
-                                (list (eval (read *query-io*))))
+                 :interactive read-eval-query
                  value)))))
        value))
 

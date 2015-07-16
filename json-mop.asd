@@ -26,5 +26,6 @@
   :serial t
   :components ((:file "package")
                (:file "conditions")
+               (:file "json-mop")
                (:file "to-lisp")
-               (:file "json-mop")))
+               (:file "to-json")))
