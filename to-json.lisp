@@ -65,16 +65,16 @@
   (declare (ignore value json-type)) 'false)
 
 (defmethod to-json-value ((value sequence) (json-type cons))
-  "Return the homogenous sequence VALUE"
+  "Return the homogeneous sequence VALUE"
   (ecase (first json-type)
     (:list (check-type value list))
     (:vector (check-type value vector)))
-  (make-instance 'homogenous-sequence-intermediate-class
+  (make-instance 'homogeneous-sequence-intermediate-class
                  :values value
                  :sequence-json-type (first json-type)
                  :element-json-type (second json-type)))
 
-(defclass homogenous-sequence-intermediate-class ()
+(defclass homogeneous-sequence-intermediate-class ()
   ((values :initarg :values)
    (sequence-json-type :initarg :sequence-json-type)
    (element-json-type :initarg :element-json-type)))
@@ -84,7 +84,7 @@
       value
       (error 'json-type-error :json-type json-type)))
 
-(defmethod encode ((sequence homogenous-sequence-intermediate-class)
+(defmethod encode ((sequence homogeneous-sequence-intermediate-class)
                    &optional (stream *standard-output*))
   (with-output (stream)
     (with-array ()
@@ -94,7 +94,7 @@
                        (encode-array-element (to-json-value element element-json-type))
                      (null-value (condition)
                        (declare (ignore condition))
-                       (restart-case (error 'null-in-homogenous-sequence
+                       (restart-case (error 'null-in-homogeneous-sequence
                                             :json-type (list sequence-json-type
                                                              element-json-type))
                          (use-value (value)

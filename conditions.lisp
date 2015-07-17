@@ -34,9 +34,9 @@
 
 (define-condition null-value (json-type-error) ())
 
-(define-condition null-in-homogenous-sequence (json-type-error) ()
+(define-condition null-in-homogeneous-sequence (json-type-error) ()
   (:report (lambda (condition stream)
-             (format stream "null encountered in a homogenous sequence of type ~S"
+             (format stream "null encountered in a homogeneous sequence of type ~S"
                      (json-type condition)))))
 
 (define-condition no-values-parsed (warning)

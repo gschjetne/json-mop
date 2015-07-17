@@ -58,7 +58,7 @@
   (ecase value (true t) (false nil)))
 
 (defmethod to-lisp-value ((value vector) (json-type cons))
-  "Return the homogenous sequence VALUE"
+  "Return the homogeneous sequence VALUE"
   (map (ecase (first json-type)
          (:vector 'vector)
          (:list 'list))
