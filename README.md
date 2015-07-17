@@ -17,7 +17,7 @@ transformed to and from JSON with one of the following:
 ### JSON type specifiers
 
 Type          | Remarks
------------------------------------------------------------
+--------------|--------------------------------------------
 `:any`        | Guesses the way to encode and decode the value 
 `:string`     | Enforces a string value
 `:number`     | Enforces a number value
