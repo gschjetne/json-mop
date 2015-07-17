@@ -101,7 +101,8 @@
                            :report "Specify a value to use in place of the null"
                            :interactive read-eval-query
                            (encode-array-element value))))))
-             values)))))
+             values))))
+  sequence)
 
 (defmethod encode ((object json-serializable-mixin)
                    &optional (stream *standard-output*))
@@ -118,4 +119,5 @@
                    (unbound-slot (condition)
                      (declare (ignore condition))
                      (when *encode-unbound-slots*
-                       (encode-object-element it nil)))))))))
+                       (encode-object-element it nil))))))))
+  object)
