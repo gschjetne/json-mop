@@ -2,8 +2,10 @@
 
 ## Introduction
 
-JSON-MOP is a small library to cut down time spent moving data between
-CLOS and JSON objects.
+JSON-MOP is a small library aiming to cut down time spent moving data
+between CLOS and JSON objects. It depends on
+[YASON](https://github.com/hanshuebner/yason) and it should be
+possible to use it alongside straight calls to functions from YASON.
 
 ## Quick Start
 
