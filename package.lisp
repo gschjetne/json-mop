@@ -35,6 +35,8 @@
            #:to-lisp-value
            #:to-json-value
            #:json-to-clos
+           ;; Re-export yason:encode
+           #:encode
            ;; Conditions
            #:slot-not-serializable
            #:slot-name
