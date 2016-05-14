@@ -26,43 +26,42 @@
 
 (defmethod to-json-value (value (json-type (eql :any)))
   "When the JSON type is :ANY, Pass the VALUE unchanged"
-  (declare (ignore json-type)) value)
+  value)
 
 (defmethod to-json-value ((value null) (json-type keyword))
-  (declare (ignore value))
   (error 'null-value :json-type json-type))
 
 (defmethod to-json-value ((value string) (json-type (eql :string)))
   "Return the string VALUE"
-  (declare (ignore json-type)) value)
+  value)
 
 (defmethod to-json-value ((value number) (json-type (eql :number)))
   "Return the number VALUE"
-  (declare (ignore json-type)) value)
+  value)
 
 (defmethod to-json-value ((value hash-table) (json-type (eql :hash-table)))
   "Return the hash-table VALUE"
-  (declare (ignore json-type)) value)
+  value)
 
 (defmethod to-json-value ((value vector) (json-type (eql :vector)))
   "Return the vector VALUE"
-  (declare (ignore json-type)) value)
+  value)
 
 (defmethod to-json-value ((value list) (json-type (eql :list)))
   "Return the list VALUE"
-  (declare (ignore json-type)) value)
+  value)
 
 (defmethod to-json-value ((value null) (json-type (eql :list)))
   "Return the empty list VALUE"
-  (declare (ignore value json-type)) #())
+  #())
 
 (defmethod to-json-value (value (json-type (eql :bool)))
   "Return the boolean true"
-  (declare (ignore value json-type)) 'true)
+  'true)
 
 (defmethod to-json-value ((value null) (json-type (eql :bool)))
   "Return the boolean false"
-  (declare (ignore value json-type)) 'false)
+  'false)
 
 (defmethod to-json-value ((value sequence) (json-type cons))
   "Return the homogeneous sequence VALUE"

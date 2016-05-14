@@ -25,36 +25,34 @@
 
 (defmethod to-lisp-value ((value (eql :null)) json-type)
   "When the value is JSON null, signal NULL-VALUE error"
-  (declare (ignore value))
   (error 'null-value :json-type json-type))
 
 (defmethod to-lisp-value (value (json-type (eql :any)))
   "When the JSON type is :ANY, Pass the VALUE unchanged"
-  (declare (ignore json-type)) value)
+  value)
 
 (defmethod to-lisp-value ((value string) (json-type (eql :string)))
   "Return the string VALUE"
-  (declare (ignore json-type)) value)
+  value)
 
 (defmethod to-lisp-value ((value number) (json-type (eql :number)))
   "Return the number VALUE"
-  (declare (ignore json-type)) value)
+  value)
 
 (defmethod to-lisp-value ((value hash-table) (json-type (eql :hash-table)))
   "Return the hash-table VALUE"
-  (declare (ignore json-type)) value)
+  value)
 
 (defmethod to-lisp-value ((value vector) (json-type (eql :vector)))
   "Return the vector VALUE"
-  (declare (ignore json-type)) value)
+  value)
 
 (defmethod to-lisp-value ((value vector) (json-type (eql :list)))
   "Return the list VALUE"
-  (declare (ignore json-type)) (coerce value 'list))
+  (coerce value 'list))
 
 (defmethod to-lisp-value (value (json-type (eql :bool)))
   "Return the boolean VALUE"
-  (declare (ignore json-type))
   (ecase value (true t) (false nil)))
 
 (defmethod to-lisp-value ((value vector) (json-type cons))
