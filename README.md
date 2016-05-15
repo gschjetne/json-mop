@@ -27,7 +27,7 @@ Type          | Remarks
 `:vector`     | Enforces a vector value
 `:list`       | Enforces a list value
 `:bool`       | Maps T and NIL with true and false
-`<symbol>`    | Uses a `(:metaclass json-serializable) class definition to direct the transformation of the value
+`<symbol>`    | Uses a `(:metaclass json-serializable)` class definition to direct the transformation of the value
 
 ### Homogeneous sequences
 
