@@ -28,7 +28,7 @@
   "When the JSON type is :ANY, Pass the VALUE unchanged"
   value)
 
-(defmethod to-json-value ((value null) (json-type keyword))
+(defmethod to-json-value ((value null) json-type)
   (error 'null-value :json-type json-type))
 
 (defmethod to-json-value ((value string) (json-type (eql :string)))
