@@ -26,7 +26,7 @@ Type          | Remarks
 `:hash-table` | Enforces a hash table value
 `:vector`     | Enforces a vector value
 `:list`       | Enforces a list value
-`:bool`       | Maps T and NIL with true and false
+`:bool`       | Maps `T` and `NIL` with `true` and `false`
 `<symbol>`    | Uses a `(:metaclass json-serializable-class)` class definition to direct the transformation of the value
 
 ### Homogeneous sequences
@@ -46,7 +46,7 @@ error, but this may change in the future.
 
 ### Encoding and decoding JSON
 
-Turning and object into JSON is done with the `yason:encode` generic
+Turning an object into JSON is done with the `yason:encode` generic
 function. Turning it back into an object is slightly more involved,
 using `json-to-clos` on a stream, string or hash table; a class name;
 and optional initargs for the class. Values decoded from the JSON will
