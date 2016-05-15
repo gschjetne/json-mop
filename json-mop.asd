@@ -24,8 +24,11 @@
                #:yason
                #:anaphora)
   :serial t
-  :components ((:file "package")
-               (:file "conditions")
-               (:file "json-mop")
-               (:file "to-lisp")
-               (:file "to-json")))
+  :components ((:module "src"
+                :serial t
+                :components
+                ((:file "package")
+                 (:file "conditions")
+                 (:file "json-mop")
+                 (:file "to-lisp")
+                 (:file "to-json")))))
