@@ -103,7 +103,7 @@
              values))))
   sequence)
 
-(defmethod encode ((object json-serializable-mixin)
+(defmethod encode ((object json-serializable)
                    &optional (stream *standard-output*))
   (with-output (stream)
     (with-object ()

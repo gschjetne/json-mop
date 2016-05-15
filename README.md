@@ -10,7 +10,7 @@ possible to use it alongside straight calls to functions from YASON.
 ## Quick Start
 
 To use JSON-MOP, define your classes with the class option
-`(:metaclass json-serializable)`. For slots that you want to appear in
+`(:metaclass json-serializable-class)`. For slots that you want to appear in
 the JSON representation of your class, add the slot option `:json-key`
 with the string to use as the attribute name. The option `:json-type`
 defaults to `:any`, but you can control how each slot value is
@@ -27,7 +27,7 @@ Type          | Remarks
 `:vector`     | Enforces a vector value
 `:list`       | Enforces a list value
 `:bool`       | Maps T and NIL with true and false
-`<symbol>`    | Uses a `(:metaclass json-serializable)` class definition to direct the transformation of the value
+`<symbol>`    | Uses a `(:metaclass json-serializable-class)` class definition to direct the transformation of the value
 
 ### Homogeneous sequences
 
@@ -67,7 +67,7 @@ First, define your classes:
    (fiction :initarg :fiction
             :json-type :bool
             :json-key "is_fiction"))
-  (:metaclass json-serializable))
+  (:metaclass json-serializable-class))
 
 (defclass author ()
   ((name :initarg :name
@@ -79,7 +79,7 @@ First, define your classes:
    (bibliography :initarg :bibliography
                  :json-type (:list book)
                  :json-key "bibliography"))
-  (:metaclass json-serializable))
+  (:metaclass json-serializable-class))
 ```
 
 Let's try creating an instance:

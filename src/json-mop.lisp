@@ -18,13 +18,13 @@
 
 (in-package #:json-mop)
 
-(defclass json-serializable (closer-mop:standard-class) ())
+(defclass json-serializable-class (closer-mop:standard-class) ())
 
-(defmethod closer-mop:validate-superclass ((class json-serializable)
+(defmethod closer-mop:validate-superclass ((class json-serializable-class)
                                            (super closer-mop:standard-class)) t)
 
 (defmethod closer-mop:validate-superclass ((class standard-class)
-                                           (super json-serializable)) t)
+                                           (super json-serializable-class)) t)
 
 (defclass json-serializable-slot (closer-mop:standard-direct-slot-definition)
   ((json-key :initarg :json-key
@@ -38,12 +38,12 @@
   (warn 'slot-not-serializable
         :slot-name (closer-mop:slot-definition-name slot)))
 
-(defmethod closer-mop:direct-slot-definition-class ((class json-serializable)
+(defmethod closer-mop:direct-slot-definition-class ((class json-serializable-class)
                                                     &rest initargs)
   (declare (ignore class initargs))
   (find-class 'json-serializable-slot))
 
-(defclass json-serializable-mixin () ())
+(defclass json-serializable () ())
 
-(defmethod closer-mop:compute-class-precedence-list ((class json-serializable))
-  (cons (find-class 'json-serializable-mixin) (call-next-method class)))
+(defmethod closer-mop:compute-class-precedence-list ((class json-serializable-class))
+  (cons (find-class 'json-serializable) (call-next-method class)))

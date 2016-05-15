@@ -32,6 +32,7 @@
                 #:awhen
                 #:it)
   (:export #:json-serializable
+           #:json-serializable-class
            #:to-lisp-value
            #:to-json-value
            #:json-to-clos
