@@ -1,5 +1,7 @@
 # JSON-MOP
 
+[![Quicklisp dist](http://quickdocs.org/badge/json-mop.svg)](http://quickdocs.org/json-mop/)
+
 ## Introduction
 
 JSON-MOP is a small library aiming to cut down time spent moving data
