@@ -59,3 +59,9 @@
   (for-all ((obj (gen-object)))
     (is (= (get-number (get-object obj))
            (get-number (get-object (obj-rt obj)))))))
+
+(test inheritance
+  (let ((child (make-instance 'child))
+        (parent-only (make-instance 'parent)))
+    (is (string= (with-output-to-string (s) (encode child s))
+                 (with-output-to-string (s) (encode parent-only s))))))

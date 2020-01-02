@@ -53,6 +53,18 @@
            :json-key "obj"))
   (:metaclass json-serializable-class))
 
+;;; as per https://github.com/gschjetne/json-mop/issues/1
+(defclass parent ()
+  ((foo :accessor foo :initarg :foo
+          :initform "Foo"
+          :json-key "foo"))
+  (:metaclass json-serializable-class))
+
+(defclass child (parent)
+    ((bar :accessor bar :initarg :bar
+      :json-key "bar"))
+  (:metaclass json-serializable-class))
+
 (defun json-string (object)
   (with-output-to-string (s)
     (encode object s)))
