@@ -49,5 +49,12 @@
 
 (defclass json-serializable () ())
 
-(defmethod closer-mop:compute-class-precedence-list ((class json-serializable-class))
-  (cons (find-class 'json-serializable) (call-next-method class)))
+(defmethod initialize-instance :around ((class json-serializable-class)
+                                        &rest rest &key direct-superclasses)
+  (apply #'call-next-method
+         class
+         :direct-superclasses
+         (append direct-superclasses (list (find-class 'json-serializable)))
+         rest))
+
+
