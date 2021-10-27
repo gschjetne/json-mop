@@ -80,22 +80,34 @@
   "Return the CLOS object VALUE"
   (json-to-clos value json-type))
 
+(defun initialize-slots-from-json (input lisp-object class-obj &optional (key-count 0))
+  "Initializes all slots from LISP-OBJECT from INPUT.
+
+All slots, direct or inherited, that exist in class CLASS-OBJ are considered."
+  (loop for superclass in (closer-mop:class-direct-superclasses class-obj)
+        unless (eq superclass (find-class 'json-serializable))
+          do (setf (values lisp-object key-count)
+                   (initialize-slots-from-json input lisp-object superclass key-count)))
+  (loop for slot in (closer-mop:class-direct-slots class-obj)
+        do (awhen (json-key-name slot)
+             (handler-case
+                 (progn
+                   (setf (slot-value lisp-object
+                                     (closer-mop:slot-definition-name slot))
+                         (to-lisp-value (gethash it input :null)
+                                        (json-type slot)))
+                   (incf key-count))
+               (null-value (condition)
+                 (declare (ignore condition)) nil))))
+  (values lisp-object key-count))
+
 (defgeneric json-to-clos (input class &rest initargs))
 
 (defmethod json-to-clos ((input hash-table) class &rest initargs)
-  (let ((lisp-object (apply #'make-instance class initargs))
-        (key-count 0))
-    (loop for slot in (closer-mop:class-direct-slots (find-class class))
-          do (awhen (json-key-name slot)
-               (handler-case
-                   (progn
-                     (setf (slot-value lisp-object
-                                       (closer-mop:slot-definition-name slot))
-                           (to-lisp-value (gethash it input :null)
-                                          (json-type slot)))
-                     (incf key-count))
-                 (null-value (condition)
-                   (declare (ignore condition)) nil))))
+  (multiple-value-bind (lisp-object key-count)
+      (initialize-slots-from-json input
+                                  (apply #'make-instance class initargs)
+                                  (find-class class))
     (when (zerop key-count) (warn 'no-values-parsed
                                   :hash-table input
                                   :class-name class))
