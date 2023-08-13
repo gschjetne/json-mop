@@ -35,6 +35,10 @@
   "When the JSON type is :ANY, Pass the VALUE unchanged"
   value)
 
+(defmethod to-lisp-value ((value hash-table) (json-type (eql :any)))
+  "When the JSON type is :ANY, Pass the hash-table VALUE unchanged"
+  value)
+
 (defmethod to-lisp-value ((value string) (json-type (eql :string)))
   "Return the string VALUE"
   value)
