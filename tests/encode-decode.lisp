@@ -38,7 +38,10 @@
     (is (= (get-number obj)
            (get-number (obj-rt obj))))))
 
-;; TODO: test hash table
+(test hash-table
+  (for-all ((obj (gen-object)))
+    (is (equalp (get-hash-table obj)
+                (get-hash-table (obj-rt obj))))))
 
 (test vector
   (for-all ((obj (gen-object)))
@@ -59,6 +62,16 @@
   (for-all ((obj (gen-object)))
     (is (= (get-number (get-object obj))
            (get-number (get-object (obj-rt obj)))))))
+
+(test any
+  (for-all ((obj (gen-object)))
+    (is (equalp (get-any obj)
+                (get-any (obj-rt obj))))))
+
+(test any-hash-table
+  (for-all ((obj (gen-object)))
+    (is (equalp (get-any-hash-table obj)
+                (get-any-hash-table (obj-rt obj))))))
 
 (test inheritance-encode
   (let ((child (make-instance 'child))

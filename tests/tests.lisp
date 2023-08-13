@@ -35,6 +35,10 @@
          :reader get-hash-table
          :json-type :hash-table
          :json-key "hash")
+   (any-hash :initarg :any-hash-table
+             :reader get-any-hash-table
+             :json-type :any
+             :json-key "anyHash")
    (vector :initarg :vector
            :reader get-vector
            :json-type :vector
@@ -50,7 +54,11 @@
    (object :initarg :object
            :reader get-object
            :json-type test-class
-           :json-key "obj"))
+           :json-key "obj")
+   (any :initarg :any
+        :reader get-any
+        :json-type :any
+        :json-key "any"))
   (:metaclass json-serializable-class))
 
 ;;; as per https://github.com/gschjetne/json-mop/issues/1
@@ -86,24 +94,45 @@
 (defun gen-bool ()
   (lambda () (zerop (random 2))))
 
+(defun gen-any (&key (choices (list (gen-string)
+                                    (gen-float)
+                                    (gen-vector))))
+  (lambda ()
+    (funcall (nth (random (length choices))
+                  choices))))
+
+(defun gen-hash-table (&key
+                         (length (gen-integer :min 0 :max 10))
+                         (keys (gen-string))
+                         (elements (gen-integer)))
+  (lambda ()
+    (let ((hash-table (make-hash-table :test 'equal)))
+      (loop repeat (funcall length)
+            do (setf (gethash (funcall keys) hash-table)
+                     (funcall elements)))
+      hash-table)))
+
 (defun gen-object (&key
                      (string (gen-string))
                      (number (gen-float))
-                     (hash-table (lambda () (make-hash-table)))
+                     (hash-table (gen-hash-table))
                      (vector (gen-vector))
                      (list (gen-list))
                      (bool (gen-bool))
                      (object (lambda () (make-instance
                                     'test-class
-                                    :number (funcall (gen-integer))))))
+                                    :number (funcall (gen-integer)))))
+                     (any (gen-any)))
   (lambda ()
     (make-instance 'test-class
                    :string (funcall string)
                    :number (funcall number)
                    :hash-table (funcall hash-table)
+                   :any-hash-table (funcall hash-table)
                    :vector (funcall vector)
                    :list (funcall list)
                    :bool (funcall bool)
-                   :object (funcall object))))
+                   :object (funcall object)
+                   :any (funcall any))))
 
 (def-suite test-all)
