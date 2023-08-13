@@ -60,8 +60,14 @@
     (is (= (get-number (get-object obj))
            (get-number (get-object (obj-rt obj)))))))
 
-(test inheritance
+(test inheritance-encode
   (let ((child (make-instance 'child))
         (parent-only (make-instance 'parent)))
     (is (string= (with-output-to-string (s) (encode child s))
                  (with-output-to-string (s) (encode parent-only s))))))
+
+(test inheritance-decode
+  (let* ((child (make-instance 'child :foo "hello" :bar "quux"))
+         (child-rt (obj-rt child)))
+    (is (string= (foo child) (foo child-rt)))
+    (is (string= (bar child) (bar child-rt)))))
