@@ -57,4 +57,11 @@
          (append direct-superclasses (list (find-class 'json-serializable)))
          rest))
 
+(defmethod reinitialize-instance :around ((class json-serializable-class)
+                                          &rest rest &key direct-superclasses)
+  (apply #'call-next-method
+         class
+         :direct-superclasses
+         (append direct-superclasses (list (find-class 'json-serializable)))
+         rest))
 
