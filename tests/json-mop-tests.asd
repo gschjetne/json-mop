@@ -29,4 +29,5 @@
   :serial t
   :components ((:file "package")
                (:file "tests")
-               (:file "encode-decode")))
+               (:file "encode-decode")
+               (:file "redefine-class")))
