@@ -39,6 +39,10 @@
              :reader get-any-hash-table
              :json-type :any
              :json-key "anyHash")
+   (obj-hash :initarg :obj-hash-table
+             :reader get-obj-hash-table
+             :json-type (:hash-table (:vector :string))
+             :json-key "objHash")
    (vector :initarg :vector
            :reader get-vector
            :json-type :vector
@@ -116,6 +120,9 @@
                      (string (gen-string))
                      (number (gen-float))
                      (hash-table (gen-hash-table))
+		     (obj-hash-table
+		      (gen-hash-table
+		       :elements (gen-vector :elements (gen-string))))
                      (vector (gen-vector))
                      (list (gen-list))
                      (bool (gen-bool))
@@ -129,6 +136,7 @@
                    :number (funcall number)
                    :hash-table (funcall hash-table)
                    :any-hash-table (funcall hash-table)
+                   :obj-hash-table (funcall obj-hash-table)
                    :vector (funcall vector)
                    :list (funcall list)
                    :bool (funcall bool)

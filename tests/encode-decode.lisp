@@ -73,6 +73,11 @@
     (is (equalp (get-any-hash-table obj)
                 (get-any-hash-table (obj-rt obj))))))
 
+(test obj-hash-table
+  (for-all ((obj (gen-object)))
+    (is (equalp (get-obj-hash-table obj)
+		(get-obj-hash-table (obj-rt obj))))))
+
 (test inheritance-encode
   (let ((child (make-instance 'child))
         (parent-only (make-instance 'parent)))

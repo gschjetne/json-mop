@@ -51,6 +51,18 @@
   "Return the hash-table VALUE"
   value)
 
+(defmethod to-lisp-value ((value hash-table) (json-type cons))
+  "Return the homogeneous hash-table VALUE"
+  (destructuring-bind (hash-keyword out-type)
+                      json-type
+    (ecase hash-keyword
+      (:hash-table
+       (let ((out (make-hash-table :test 'equal :size (hash-table-size value))))
+         (maphash (lambda (k v)
+                    (setf (gethash k out) (to-lisp-value v out-type)))
+                  value)
+         out)))))
+
 (defmethod to-lisp-value ((value vector) (json-type (eql :vector)))
   "Return the vector VALUE"
   value)

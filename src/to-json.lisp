@@ -67,6 +67,20 @@
   "Return the boolean false"
   'false)
 
+(defclass homogeneous-hash-table-intermediate-class ()
+  ((values :initarg :values)
+   (hash-table-json-type :initarg :hash-table-json-type)
+   (element-json-type :initarg :element-json-type)))
+
+(defmethod to-json-value ((value hash-table) (json-type cons))
+  "Return the homogeneous hash-table VALUE"
+  (ecase (first json-type)
+    (:hash-table (check-type value hash-table)))
+  (make-instance 'homogeneous-hash-table-intermediate-class
+                 :values value
+                 :hash-table-json-type (first json-type)
+                 :element-json-type (second json-type)))
+
 (defmethod to-json-value ((value sequence) (json-type cons))
   "Return the homogeneous sequence VALUE"
   (ecase (first json-type)
@@ -106,6 +120,19 @@
                            (encode-array-element value))))))
              values))))
   sequence)
+
+(defmethod encode ((hash-table homogeneous-hash-table-intermediate-class)
+                   &optional (stream *standard-output*))
+  (with-output (stream)
+    (with-object ()
+      (with-slots (values hash-table-json-type element-json-type)
+	  hash-table
+        (maphash (lambda (key value)
+                       (encode-object-element
+			(to-json-value key :string)
+			(to-json-value value element-json-type)))
+		 values))))
+  hash-table)
 
 (defmethod encode ((object json-serializable)
                    &optional (stream *standard-output*))

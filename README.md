@@ -33,11 +33,11 @@ Type          | Remarks
 `:bool`       | Maps `T` and `NIL` with `true` and `false`
 `<symbol>`    | Uses a `(:metaclass json-serializable-class)` class definition to direct the transformation of the value
 
-### Homogeneous sequences
+### Homogeneous sequences and objects
 
 In addition, the type specifier may be a list of two elements, first
-element is one of `:list`, `:vector`; the second is any JSON type
-specifier that is to be applied to the elements of the list.
+element is one of `:list`, `:vector`, `:hash-table`; the second is any JSON type
+specifier that is to be applied to the elements of the list or the values of the hash-table.
 
 ### NIL and null semantics
 
