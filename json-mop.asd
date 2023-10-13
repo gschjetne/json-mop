@@ -27,6 +27,7 @@
   :depends-on (#:closer-mop
                #:yason
                #:anaphora)
+  :in-order-to ((test-op (test-op "json-mop-tests")))
   :serial t
   :components ((:module "src"
                 :serial t
