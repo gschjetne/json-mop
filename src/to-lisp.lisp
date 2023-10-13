@@ -47,6 +47,10 @@
   "Return the number VALUE"
   value)
 
+(defmethod to-lisp-value ((value integer) (json-type (eql :integer)))
+  "Return the number VALUE"
+  value)
+
 (defmethod to-lisp-value ((value hash-table) (json-type (eql :hash-table)))
   "Return the hash-table VALUE"
   value)

@@ -38,6 +38,11 @@
     (is (= (get-number obj)
            (get-number (obj-rt obj))))))
 
+(test integer
+  (for-all ((obj (gen-object)))
+    (is (= (get-integer obj)
+           (get-integer (obj-rt obj))))))
+
 (test hash-table
   (for-all ((obj (gen-object)))
     (is (equalp (get-hash-table obj)
