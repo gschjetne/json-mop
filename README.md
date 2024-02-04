@@ -27,7 +27,7 @@ Type          | Remarks
 `:any`        | Guesses the way to encode and decode the value 
 `:string`     | Enforces a string value
 `:number`     | Enforces a number value
-`:integer`    | Enforces a integer value
+`:integer`    | Enforces an integer value
 `:hash-table` | Enforces a hash table value
 `:vector`     | Enforces a vector value
 `:list`       | Enforces a list value
