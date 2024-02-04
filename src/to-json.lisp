@@ -43,6 +43,10 @@
   "Return the number VALUE"
   value)
 
+(defmethod to-json-value ((value integer) (json-type (eql :integer)))
+  "Return the integer VALUE"
+  value)
+
 (defmethod to-json-value ((value hash-table) (json-type (eql :hash-table)))
   "Return the hash-table VALUE"
   value)

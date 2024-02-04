@@ -31,6 +31,10 @@
            :reader get-number
            :json-type :number
            :json-key "num")
+   (integer :initarg :integer
+	    :reader get-integer
+	    :json-type :integer
+	    :json-key "int")
    (hash :initarg :hash-table
          :reader get-hash-table
          :json-type :hash-table
@@ -119,6 +123,7 @@
 (defun gen-object (&key
                      (string (gen-string))
                      (number (gen-float))
+		     (integer (gen-integer))
                      (hash-table (gen-hash-table))
 		     (obj-hash-table
 		      (gen-hash-table
@@ -134,6 +139,7 @@
     (make-instance 'test-class
                    :string (funcall string)
                    :number (funcall number)
+		   :integer (funcall integer)
                    :hash-table (funcall hash-table)
                    :any-hash-table (funcall hash-table)
                    :obj-hash-table (funcall obj-hash-table)
