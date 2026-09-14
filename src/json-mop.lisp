@@ -38,6 +38,19 @@
               :initform :any
               :reader json-type)))
 
+;; ABCL passes :JSON-KEY and :JSON-TYPE to SHARED-INITIALIZE but does
+;; not store them in the slots of slot-definition metaobjects, nor
+;; does it apply their initforms, leaving both slots unbound. Set them
+;; by hand; on other implementations this is a no-op.
+(defmethod shared-initialize :after ((slot json-serializable-slot) slot-names
+                                     &key (json-key nil json-key-p)
+                                          (json-type :any json-type-p))
+  (declare (ignore slot-names))
+  (when (or json-key-p (not (slot-boundp slot 'json-key)))
+    (setf (slot-value slot 'json-key) json-key))
+  (when (or json-type-p (not (slot-boundp slot 'json-type)))
+    (setf (slot-value slot 'json-type) json-type)))
+
 (defmethod json-key-name ((slot closer-mop:standard-direct-slot-definition))
   (warn 'slot-not-serializable
         :slot-name (closer-mop:slot-definition-name slot)))

@@ -19,14 +19,47 @@ jobs:
   test:
     name: ${{ matrix.lisp }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    # Experimental entries report their result but do not fail the run.
+    continue-on-error: ${{ matrix.experimental || false }}
     strategy:
       fail-fast: false
       matrix:
-        # A pinned SBCL for reproducible results, plus the latest
-        # SBCL binary Roswell offers to catch upstream breakage early.
-        lisp: [ sbcl-bin/2.4.1, sbcl-bin ]
-        os: [ ubuntu-latest ]
+        include:
+          # Required: the implementations and platforms people actually
+          # use for this library, per the 2024 Common Lisp Community
+          # Survey (SBCL is the primary implementation for ~88% of
+          # respondents; CCL and ECL are the most used secondary ones).
+          #
+          # SBCL pinned for reproducibility, and latest to catch
+          # upstream breakage early.
+          - { lisp: sbcl-bin/2.4.1, os: ubuntu-latest }
+          - { lisp: sbcl-bin,       os: ubuntu-latest }
+          # macos-latest is Apple Silicon; covers the second most
+          # common development platform for about a minute of runtime.
+          - { lisp: sbcl-bin,       os: macos-latest }
+          # CCL: a different CLOS/MOP implementation, installs in
+          # under a minute. Linux only: no arm64 CCL exists for the
+          # macOS runners.
+          - { lisp: ccl-bin,        os: ubuntu-latest }
+          # ECL: third most used implementation; Roswell builds it from
+          # source (~5 min uncached), the build is then cached.
+          - { lisp: ecl,            os: ubuntu-latest }
+          # ABCL: a JVM implementation with its own MOP quirks (see
+          # issue #23); installs in under a minute.
+          - { lisp: abcl-bin,       os: ubuntu-latest }
 
+          # Experimental entries (add `experimental: true`) report
+          # their result without failing the run.
+
+          # Deliberately not tested:
+          # - windows-latest: Roswell's install-for-ci.sh calls pacman
+          #   and fails; the library has no OS-specific code, so SBCL
+          #   on Linux and macOS is representative.
+          # - clasp-bin: Roswell's binary needs libLLVM-13, absent on
+          #   ubuntu-latest.
+          # - clisp: Yason's output stream lacks STREAM-LINE-COLUMN on
+          #   CLISP, so encoding fails inside the dependency.
     steps:
     - uses: actions/checkout@v4
 
