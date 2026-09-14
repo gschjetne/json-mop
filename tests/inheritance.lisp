@@ -20,20 +20,36 @@
 ;; CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ;; SOFTWARE.
 
-(asdf:defsystem #:json-mop-tests
-  :description "Test suite for JSON-MOP"
-  :author "Grim Schjetne"
-  :license "LGPLv3+"
-  :depends-on (#:json-mop
-               #:fiveam)
-  :perform (test-op (o s)
-                    (uiop:symbol-call :fiveam '#:run!
-                                      (find-symbol* '#:test-all
-                                                    '#:json-mop-tests)))
-  :serial t
-  :components ((:file "package")
-               (:file "tests")
-               (:file "encode-decode")
-               (:file "redefine-class")
-               (:file "null-handling")
-               (:file "inheritance")))
+(in-package #:json-mop-tests)
+
+(def-suite inheritance
+  :in test-all
+  :description "Test encoding and decoding across class hierarchies")
+
+(in-suite inheritance)
+
+(defclass grandparent ()
+  ((a :initarg :a :reader a :json-type :integer :json-key "a"))
+  (:metaclass json-serializable-class))
+
+(defclass middle (grandparent)
+  ((b :initarg :b :reader b :json-type :integer :json-key "b"))
+  (:metaclass json-serializable-class))
+
+(defclass grandchild (middle)
+  ((c :initarg :c :reader c :json-type :integer :json-key "c"))
+  (:metaclass json-serializable-class))
+
+(test decode-inherited-slots
+  "Slots from every ancestor are populated when decoding (issue #19)."
+  (let ((obj (json-to-clos "{\"a\": 1, \"b\": 2, \"c\": 3}" 'grandchild)))
+    (is (= 1 (a obj)))
+    (is (= 2 (b obj)))
+    (is (= 3 (c obj)))))
+
+(test round-trip-inherited-slots
+  (let* ((obj (make-instance 'grandchild :a 1 :b 2 :c 3))
+         (rt (obj-rt obj)))
+    (is (= (a obj) (a rt)))
+    (is (= (b obj) (b rt)))
+    (is (= (c obj) (c rt)))))
