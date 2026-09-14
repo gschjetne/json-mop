@@ -57,6 +57,18 @@ using `json-to-clos` on a stream, string or hash table; a class name;
 and optional initargs for the class. Values decoded from the JSON will
 override values specified in the initargs.
 
+### Verbose printing
+
+By default, json-serializable objects are printed verbosely.
+This means that the JSON resulting from encoding the instance is
+printed in the REPL.
+If you want to turn off verbose printing, you can:
+
+```lisp
+(setf json-mop:*print-verbose* nil)
+```
+See example for details.
+
 ### Example
 
 First, define your classes:
@@ -108,6 +120,11 @@ Let's try creating an instance:
                                  :title "Adventures of Huckleberry Finn"
                                  :year 1884
                                  :fiction t))))
+```
+
+```lisp
+*author*
+;; => #<AUTHOR {"name":"Mark Twain","year_birth":1835,"bibliography":[{"title":"The Gilded Age: A Tale of Today","year_published":1873,"is_fiction":true},{"title":"Life on the Mississippi","year_published":1883,"is_fiction":false},{"title":"Adventures of Huckleberry Finn","year_published":1884,"is_fiction":true}]} {100463F1E3}>
 ```
 
 To turn it into JSON, `encode` it:

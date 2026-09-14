@@ -43,6 +43,8 @@
            #:*encode-unbound-slots*
            ;; Re-export yason:encode
            #:encode
+	   ;; Adjust repl printing
+	   #:*print-verbose*
            ;; Conditions
            #:slot-not-serializable
            #:slot-name

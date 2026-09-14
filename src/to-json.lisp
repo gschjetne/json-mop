@@ -158,3 +158,9 @@
                           (encode-object-element it nil)))))))))
   object)
 
+(defmethod print-object ((object json-serializable) stream)
+  "If *print-verbose* is t, then print a json-serializable
+ class object encoded as JSON to the REPL."
+  (print-unreadable-object (object stream :type t :identity t)
+    (when *print-verbose*
+      (encode object stream))))

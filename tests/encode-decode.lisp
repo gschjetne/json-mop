@@ -94,3 +94,9 @@
          (child-rt (obj-rt child)))
     (is (string= (foo child) (foo child-rt)))
     (is (string= (bar child) (bar child-rt)))))
+
+(test print-object
+  (let ((child (make-instance 'child :foo "hello" :bar "quux")))
+    (is (string= "#<CHILD {\"bar\":\"quux\",\"foo\":\"hello\"}"
+		 (subseq (with-output-to-string (s) (print-object child s))
+			 0 36)))))
