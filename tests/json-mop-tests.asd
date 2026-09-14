@@ -26,6 +26,10 @@
   :license "LGPLv3+"
   :depends-on (#:json-mop
                #:fiveam)
+  :perform (test-op (o s)
+                    (uiop:symbol-call :fiveam '#:run!
+                                      (find-symbol* '#:test-all
+                                                    '#:json-mop-tests)))
   :serial t
   :components ((:file "package")
                (:file "tests")
