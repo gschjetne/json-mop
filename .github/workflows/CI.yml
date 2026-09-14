@@ -45,11 +45,12 @@ jobs:
           # ECL: third most used implementation; Roswell builds it from
           # source (~5 min uncached), the build is then cached.
           - { lisp: ecl,            os: ubuntu-latest }
+          # ABCL: a JVM implementation with its own MOP quirks (see
+          # issue #23); installs in under a minute.
+          - { lisp: abcl-bin,       os: ubuntu-latest }
 
-          # Experimental: known not to pass yet, tracked in issues.
-          # ABCL: slot options are not stored on custom slot-definition
-          # metaobjects, see issue #23.
-          - { lisp: abcl-bin,       os: ubuntu-latest, experimental: true }
+          # Experimental entries (add `experimental: true`) report
+          # their result without failing the run.
 
           # Deliberately not tested:
           # - windows-latest: Roswell's install-for-ci.sh calls pacman
