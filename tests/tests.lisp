@@ -111,7 +111,11 @@
 
 (defun gen-hash-table (&key
                          (length (gen-integer :min 0 :max 10))
-                         (keys (gen-string))
+                         ;; Keys are never empty: ABCL gives an empty
+                         ;; fill-pointer string (as returned by the JSON
+                         ;; parser) a different SXHASH from "", so EQUAL
+                         ;; hash tables cannot find such a key.
+                         (keys (gen-string :length (gen-integer :min 1 :max 80)))
                          (elements (gen-integer)))
   (lambda ()
     (let ((hash-table (make-hash-table :test 'equal)))
