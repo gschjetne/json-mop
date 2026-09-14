@@ -23,11 +23,17 @@
 (asdf:defsystem #:json-mop-tests
   :description "Test suite for JSON-MOP"
   :author "Grim Schjetne"
-  :license "LGPLv3+"
+  :license "MIT"
   :depends-on (#:json-mop
                #:fiveam)
+  :perform (test-op (o s)
+                    (uiop:symbol-call :fiveam '#:run!
+                                      (find-symbol* '#:test-all
+                                                    '#:json-mop-tests)))
   :serial t
   :components ((:file "package")
                (:file "tests")
                (:file "encode-decode")
-               (:file "redefine-class")))
+               (:file "redefine-class")
+               (:file "null-handling")
+               (:file "inheritance")))

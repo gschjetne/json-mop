@@ -88,7 +88,7 @@
          (handler-case (to-lisp-value item (second json-type))
            (null-value (condition)
              (declare (ignore condition))
-             (restart-case (error 'null-in-homogenous-sequence
+             (restart-case (error 'null-in-homogeneous-sequence
                                   :json-type json-type)
                (use-value (value)
                  :report "Specify a value to use in place of the null"
