@@ -23,7 +23,7 @@
 (asdf:defsystem #:json-mop-tests
   :description "Test suite for JSON-MOP"
   :author "Grim Schjetne"
-  :license "LGPLv3+"
+  :license "MIT"
   :depends-on (#:json-mop
                #:fiveam)
   :perform (test-op (o s)
