@@ -40,6 +40,7 @@
            #:to-lisp-value
            #:to-json-value
            #:json-to-clos
+           #:*encode-unbound-slots*
            ;; Re-export yason:encode
            #:encode
            ;; Conditions
@@ -48,7 +49,7 @@
            #:json-type-error
            #:json-type
            #:null-value
-           #:null-in-homogenous-sequence
+           #:null-in-homogeneous-sequence
            #:no-values-parsed
            #:no-values-hash-table
            #:no-values-class))
