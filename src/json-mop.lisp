@@ -22,6 +22,8 @@
 
 (in-package #:json-mop)
 
+(defvar *print-verbose* t)
+
 (defclass json-serializable-class (closer-mop:standard-class) ())
 
 (defmethod closer-mop:validate-superclass ((class json-serializable-class)
