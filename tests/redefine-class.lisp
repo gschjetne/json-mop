@@ -21,5 +21,5 @@
     (:metaclass json-serializable-class))
 
   (let* ((instance (make-instance 'redefined-class))
-         (parsed (yason:parse (json-string instance))))
+         (parsed (com.inuoe.jzon:parse (json-string instance))))
     (is (= 1 (gethash "foo" parsed)))))

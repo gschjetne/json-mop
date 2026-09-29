@@ -68,6 +68,6 @@
   "Unbound slots are omitted by default and encoded as null when
 *ENCODE-UNBOUND-SLOTS* is true."
   (let ((box (make-instance 'optional-box)))
-    (is-false (nth-value 1 (gethash "foo" (yason:parse (json-string box)))))
+    (is-false (nth-value 1 (gethash "foo" (com.inuoe.jzon:parse (json-string box)))))
     (let ((*encode-unbound-slots* t))
-      (is-true (nth-value 1 (gethash "foo" (yason:parse (json-string box))))))))
+      (is-true (nth-value 1 (gethash "foo" (com.inuoe.jzon:parse (json-string box))))))))

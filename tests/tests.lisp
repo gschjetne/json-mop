@@ -103,7 +103,7 @@
   (lambda () (zerop (random 2))))
 
 (defun gen-any (&key (choices (list (gen-string)
-                                    (gen-float)
+                                    (gen-float :type 'double-float)
                                     (gen-vector))))
   (lambda ()
     (funcall (nth (random (length choices))
@@ -126,7 +126,7 @@
 
 (defun gen-object (&key
                      (string (gen-string))
-                     (number (gen-float))
+                     (number (gen-float :type 'double-float))
 		     (integer (gen-integer))
                      (hash-table (gen-hash-table))
 		     (obj-hash-table

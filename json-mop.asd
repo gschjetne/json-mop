@@ -25,7 +25,7 @@
   :author "Grim Schjetne"
   :license "MIT"
   :depends-on (#:closer-mop
-               #:yason
+               #:com.inuoe.jzon
                #:anaphora)
   :in-order-to ((test-op (test-op "json-mop-tests")))
   :serial t

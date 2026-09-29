@@ -22,16 +22,7 @@
 
 (defpackage #:json-mop
   (:use #:cl)
-  (:import-from #:yason
-                #:true
-                #:false
-                #:parse
-                #:encode
-                #:encode-array-element
-                #:encode-object-element
-                #:with-output
-                #:with-array
-                #:with-object)
+  (:local-nicknames (#:jzon #:com.inuoe.jzon))
   (:import-from #:anaphora
                 #:awhen
                 #:it)
@@ -41,7 +32,6 @@
            #:to-json-value
            #:json-to-clos
            #:*encode-unbound-slots*
-           ;; Re-export yason:encode
            #:encode
            ;; Conditions
            #:slot-not-serializable

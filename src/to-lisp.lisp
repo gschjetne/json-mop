@@ -24,10 +24,10 @@
 
 (defgeneric to-lisp-value (value json-type)
   (:documentation
-   "Turns a value passed by Yason into the appropriate
+   "Turns a value parsed by jzon into the appropriate
   Lisp type as specified by JSON-TYPE"))
 
-(defmethod to-lisp-value ((value (eql :null)) json-type)
+(defmethod to-lisp-value ((value (eql 'null)) json-type)
   "When the value is JSON null, signal NULL-VALUE error"
   (error 'null-value :json-type json-type))
 
@@ -77,7 +77,7 @@
 
 (defmethod to-lisp-value (value (json-type (eql :bool)))
   "Return the boolean VALUE"
-  (ecase value (true t) (false nil)))
+  (ecase value ((t) t) ((nil) nil)))
 
 (defmethod to-lisp-value ((value vector) (json-type cons))
   "Return the homogeneous sequence VALUE"
@@ -100,51 +100,185 @@
   "Return the CLOS object VALUE"
   (json-to-clos value json-type))
 
-(defun initialize-slots-from-json (input lisp-object class-obj &optional (key-count 0))
-  "Initializes all slots from LISP-OBJECT from INPUT.
+;;; Streaming decoder
+;;;
+;;; Objects of JSON-SERIALIZABLE-CLASS classes, and homogeneous
+;;; sequences and hash tables, are read event by event from a jzon
+;;; parser, so that slots are set as their values come up. Any other
+;;; value is read whole and handed to TO-LISP-VALUE.
+;;;
+;;; Invariant: READ-JSON-VALUE only lets a NULL-VALUE error escape
+;;; once the value has been read completely, so that a handler can
+;;; carry on reading from the parser.
 
-All slots, direct or inherited, that exist in class CLASS-OBJ are considered."
-  (loop for superclass in (closer-mop:class-direct-superclasses class-obj)
-        unless (eq superclass (find-class 'json-serializable))
-          do (setf (values lisp-object key-count)
-                   (initialize-slots-from-json input lisp-object superclass key-count)))
-  (loop for slot in (closer-mop:class-direct-slots class-obj)
-        do (awhen (json-key-name slot)
+(defun json-class-p (json-type)
+  (and (symbolp json-type)
+       (typep (find-class json-type nil) 'json-serializable-class)))
+
+(defun homogeneous-type-p (json-type keywords)
+  (and (consp json-type)
+       (member (first json-type) keywords)))
+
+(defun skip-json-value (parser event)
+  "Skip the value starting with EVENT in PARSER."
+  (when (member event '(:begin-array :begin-object))
+    (loop with depth = 1
+          until (zerop depth)
+          do (case (jzon:parse-next parser)
+               ((:begin-array :begin-object) (incf depth))
+               ((:end-array :end-object) (decf depth))))))
+
+(defun read-json-element (parser event value)
+  "Read the value starting with EVENT and VALUE in PARSER the way
+JZON:PARSE would."
+  (ecase event
+    (:value value)
+    (:begin-array
+     (coerce (loop for (event value) = (multiple-value-list
+                                        (jzon:parse-next parser))
+                   until (eq event :end-array)
+                   collect (read-json-element parser event value))
+             'simple-vector))
+    (:begin-object
+     (loop with hash-table = (make-hash-table :test 'equal)
+           for (event key) = (multiple-value-list (jzon:parse-next parser))
+           until (eq event :end-object)
+           do (setf (gethash key hash-table)
+                    (multiple-value-call #'read-json-element
+                      parser (jzon:parse-next parser)))
+           finally (return hash-table)))))
+
+(defun find-json-slot (class key)
+  "Return the most specific slot definition in CLASS with the JSON key KEY."
+  (dolist (superclass (closer-mop:class-precedence-list class))
+    (dolist (slot (closer-mop:class-direct-slots superclass))
+      (when (and (typep slot 'json-serializable-slot)
+                 (equal (json-key-name slot) key))
+        (return-from find-json-slot slot)))))
+
+(defun read-json-object (parser class-name &rest initargs)
+  "Read the rest of a JSON object from PARSER into a fresh instance of
+CLASS-NAME, setting each slot as its key comes up."
+  (let* ((lisp-object (apply #'make-instance class-name initargs))
+         (class (class-of lisp-object))
+         (key-count 0))
+    (loop for (event key) = (multiple-value-list (jzon:parse-next parser))
+          until (eq event :end-object)
+          do (multiple-value-bind (event value) (jzon:parse-next parser)
+               (let ((slot (find-json-slot class key)))
+                 (if slot
+                     (handler-case
+                         (progn
+                           (setf (slot-value lisp-object
+                                             (closer-mop:slot-definition-name slot))
+                                 (read-json-value parser (json-type slot)
+                                                  event value))
+                           (incf key-count))
+                       (null-value (condition)
+                         (declare (ignore condition)) nil))
+                     (skip-json-value parser event)))))
+    (when (zerop key-count) (warn 'no-values-parsed
+                                  :class-name class-name))
+    (values lisp-object key-count)))
+
+(defun read-homogeneous-sequence (parser json-type)
+  "Read the rest of a JSON array from PARSER as the homogeneous
+sequence type JSON-TYPE."
+  (let ((items (loop for (event value) = (multiple-value-list
+                                          (jzon:parse-next parser))
+                     until (eq event :end-array)
+                     collect (handler-case
+                                 (read-json-value parser (second json-type)
+                                                  event value)
+                               (null-value (condition)
+                                 (declare (ignore condition))
+                                 (restart-case (error 'null-in-homogeneous-sequence
+                                                      :json-type json-type)
+                                   (use-value (value)
+                                     :report "Specify a value to use in place of the null"
+                                     :interactive read-eval-query
+                                     value)))))))
+    (ecase (first json-type)
+      (:list items)
+      (:vector (coerce items 'simple-vector)))))
+
+(defun read-homogeneous-hash-table (parser json-type)
+  "Read the rest of a JSON object from PARSER as the homogeneous
+hash-table type JSON-TYPE."
+  (loop with hash-table = (make-hash-table :test 'equal)
+        for (event key) = (multiple-value-list (jzon:parse-next parser))
+        until (eq event :end-object)
+        do (multiple-value-bind (event value) (jzon:parse-next parser)
              (handler-case
-                 (progn
-                   (setf (slot-value lisp-object
-                                     (closer-mop:slot-definition-name slot))
-                         (to-lisp-value (gethash it input :null)
-                                        (json-type slot)))
-                   (incf key-count))
+                 (setf (gethash key hash-table)
+                       (read-json-value parser (second json-type) event value))
                (null-value (condition)
-                 (declare (ignore condition)) nil))))
-  (values lisp-object key-count))
+                 ;; Finish reading the object before passing the
+                 ;; error on, see the invariant above.
+                 (loop for (event) = (multiple-value-list
+                                      (jzon:parse-next parser))
+                       until (eq event :end-object)
+                       do (skip-json-value parser (jzon:parse-next parser)))
+                 (error condition))))
+        finally (return hash-table)))
+
+(defun read-json-value (parser json-type event value)
+  "Read the value starting with EVENT and VALUE in PARSER as JSON-TYPE."
+  (case event
+    (:begin-object
+     (cond ((json-class-p json-type)
+            (values (read-json-object parser json-type)))
+           ((homogeneous-type-p json-type '(:hash-table))
+            (read-homogeneous-hash-table parser json-type))
+           (t (to-lisp-value (read-json-element parser event value)
+                             json-type))))
+    (:begin-array
+     (if (homogeneous-type-p json-type '(:list :vector))
+         (read-homogeneous-sequence parser json-type)
+         (to-lisp-value (read-json-element parser event value)
+                        json-type)))
+    (t (to-lisp-value value json-type))))
 
 (defgeneric json-to-clos (input class &rest initargs))
 
 (defmethod json-to-clos ((input hash-table) class &rest initargs)
-  (multiple-value-bind (lisp-object key-count)
-      (initialize-slots-from-json input
-                                  (apply #'make-instance class initargs)
-                                  (find-class class))
+  (let* ((lisp-object (apply #'make-instance class initargs))
+         (key-count 0))
+    ;; Least specific first, so that more specific slots win
+    (loop for superclass in (reverse (closer-mop:class-precedence-list
+                                      (class-of lisp-object)))
+          do (loop for slot in (closer-mop:class-direct-slots superclass)
+                   when (typep slot 'json-serializable-slot)
+                     do (awhen (json-key-name slot)
+                          (handler-case
+                              (progn
+                                (setf (slot-value lisp-object
+                                                  (closer-mop:slot-definition-name slot))
+                                      (to-lisp-value (gethash it input 'null)
+                                                     (json-type slot)))
+                                (incf key-count))
+                            (null-value (condition)
+                              (declare (ignore condition)) nil)))))
     (when (zerop key-count) (warn 'no-values-parsed
                                   :hash-table input
                                   :class-name class))
     (values lisp-object key-count)))
 
+(defun parse-to-clos (input class initargs)
+  "Read a JSON object from INPUT, which is anything JZON:MAKE-PARSER
+accepts, into an instance of CLASS."
+  (jzon:with-parser (parser input)
+    (multiple-value-bind (event value) (jzon:parse-next parser)
+      (declare (ignore value))
+      (unless (eq event :begin-object)
+        (error 'json-type-error :json-type class))
+      (apply #'read-json-object parser class initargs))))
+
 (defmethod json-to-clos ((input stream) class &rest initargs)
-  (apply #'json-to-clos
-         (parse input
-                      :object-as :hash-table
-                      :json-arrays-as-vectors t
-                      :json-booleans-as-symbols t
-                      :json-nulls-as-keyword t)
-         class initargs))
+  (parse-to-clos input class initargs))
 
 (defmethod json-to-clos ((input pathname) class &rest initargs)
-  (with-open-file (stream input)
-    (apply #'json-to-clos stream class initargs)))
+  (parse-to-clos input class initargs))
 
 (defmethod json-to-clos ((input string) class &rest initargs)
-  (apply #'json-to-clos (make-string-input-stream input) class initargs))
+  (parse-to-clos input class initargs))
