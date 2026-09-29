@@ -109,3 +109,43 @@ following keys are still read."
   "Objects can be written with jzon directly."
   (is (string= "{\"x\":1,\"y\":2}"
                (com.inuoe.jzon:stringify (make-instance 'point :x 1 :y 2)))))
+
+(test duplicate-keys
+  "The last of duplicate keys wins."
+  (is (= 2 (x (json-to-clos "{\"x\": 1, \"x\": 2}" 'point)))))
+
+(defclass keyed-parent ()
+  ((parent-slot :initarg :parent-slot :json-type :integer :json-key "k"))
+  (:metaclass json-serializable-class))
+
+(defclass keyed-child (keyed-parent)
+  ((child-slot :initarg :child-slot :reader child-slot
+               :json-type :string :json-key "k"))
+  (:metaclass json-serializable-class))
+
+(test same-key-in-subclass
+  "A key shared with a superclass sets only the most specific slot."
+  (dolist (input (list "{\"k\": \"s\"}"
+                       (com.inuoe.jzon:parse "{\"k\": \"s\"}")))
+    (let ((child (json-to-clos input 'keyed-child)))
+      (is (string= "s" (child-slot child)))
+      (is (not (slot-boundp child 'parent-slot))))))
+
+(test pathname-input
+  (let ((path (uiop:with-temporary-file (:stream s :pathname p :keep t)
+                (write-string "{\"x\": 1, \"y\": 2}" s)
+                p)))
+    (unwind-protect (is (= 2 (y (json-to-clos path 'point))))
+      (delete-file path))))
+
+(test truncated-input
+  "Truncated input signals a parse error rather than looping."
+  (signals com.inuoe.jzon:json-parse-error
+    (json-to-clos "{\"points\": [{\"x\": 1" 'shape))
+  (signals com.inuoe.jzon:json-parse-error
+    (json-to-clos "{\"junk\": [[" 'point)))
+
+(test wrong-container
+  (signals json-type-error (json-to-clos "{\"points\": {}}" 'shape))
+  (signals json-type-error (json-to-clos "{\"weights\": []}" 'shape))
+  (signals json-type-error (json-to-clos "{\"points\": [[]]}" 'shape)))
