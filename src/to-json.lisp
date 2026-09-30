@@ -26,7 +26,7 @@
 
 (defgeneric to-json-value (value json-type)
   (:documentation
-   "Turns a VALUE into a form appropriate for consumption by Yason"))
+   "Turns a VALUE into a form appropriate for consumption by jzon"))
 
 (defmethod to-json-value (value (json-type (eql :any)))
   "When the JSON type is :ANY, Pass the VALUE unchanged"
@@ -65,11 +65,11 @@
 
 (defmethod to-json-value (value (json-type (eql :bool)))
   "Return the boolean true"
-  'true)
+  t)
 
 (defmethod to-json-value ((value null) (json-type (eql :bool)))
   "Return the boolean false"
-  'false)
+  nil)
 
 (defclass homogeneous-hash-table-intermediate-class ()
   ((values :initarg :values)
@@ -105,56 +105,52 @@
       value
       (error 'json-type-error :json-type json-type)))
 
-(defmethod encode ((sequence homogeneous-sequence-intermediate-class)
-                   &optional (stream *standard-output*))
-  (with-output (stream)
-    (with-array ()
-      (with-slots (values sequence-json-type element-json-type) sequence
-        (map nil (lambda (element)
-                   (handler-case
-                       (encode-array-element (to-json-value element element-json-type))
-                     (null-value (condition)
-                       (declare (ignore condition))
-                       (restart-case (error 'null-in-homogeneous-sequence
-                                            :json-type (list sequence-json-type
-                                                             element-json-type))
-                         (use-value (value)
-                           :report "Specify a value to use in place of the null"
-                           :interactive read-eval-query
-                           (encode-array-element value))))))
-             values))))
-  sequence)
+(defmethod jzon:write-value ((writer jzon:writer)
+                             (sequence homogeneous-sequence-intermediate-class))
+  (jzon:with-array writer
+    (with-slots (values sequence-json-type element-json-type) sequence
+      (map nil (lambda (element)
+                 (jzon:write-value
+                  writer
+                  (handler-case (to-json-value element element-json-type)
+                    (null-value (condition)
+                      (declare (ignore condition))
+                      (restart-case (error 'null-in-homogeneous-sequence
+                                           :json-type (list sequence-json-type
+                                                            element-json-type))
+                        (use-value (value)
+                          :report "Specify a value to use in place of the null"
+                          :interactive read-eval-query
+                          value))))))
+           values))))
 
-(defmethod encode ((hash-table homogeneous-hash-table-intermediate-class)
-                   &optional (stream *standard-output*))
-  (with-output (stream)
-    (with-object ()
-      (with-slots (values hash-table-json-type element-json-type)
-	  hash-table
-        (maphash (lambda (key value)
-                       (encode-object-element
-			(to-json-value key :string)
-			(to-json-value value element-json-type)))
-		 values))))
-  hash-table)
+(defmethod jzon:write-value ((writer jzon:writer)
+                             (hash-table homogeneous-hash-table-intermediate-class))
+  (jzon:with-object writer
+    (with-slots (values element-json-type) hash-table
+      (maphash (lambda (key value)
+                 (jzon:write-properties writer
+                                        (to-json-value key :string)
+                                        (to-json-value value element-json-type)))
+               values))))
 
-(defmethod encode ((object json-serializable)
-                   &optional (stream *standard-output*))
-  (with-output (stream)
-    (with-object ()
-      (loop for class in (closer-mop:class-precedence-list (class-of object))
-         do (loop for slot in (closer-mop:class-direct-slots class)
-               when (typep slot 'json-serializable-slot)
-               do (awhen (json-key-name slot)
-                    (handler-case
-                        (encode-object-element
-                         it
-                         (to-json-value
-                          (slot-value object (closer-mop:slot-definition-name slot))
-                          (json-type slot)))
-                      (unbound-slot (condition)
-                        (declare (ignore condition))
-                        (when *encode-unbound-slots*
-                          (encode-object-element it nil)))))))))
+(defmethod jzon:write-value ((writer jzon:writer) (object json-serializable))
+  (jzon:with-object writer
+    (loop for class in (closer-mop:class-precedence-list (class-of object))
+          do (loop for slot in (closer-mop:class-direct-slots class)
+                   when (typep slot 'json-serializable-slot)
+                     do (awhen (json-key-name slot)
+                          (let ((slot-name (closer-mop:slot-definition-name slot)))
+                            (cond ((slot-boundp object slot-name)
+                                   (jzon:write-properties
+                                    writer it
+                                    (to-json-value (slot-value object slot-name)
+                                                   (json-type slot))))
+                                  (*encode-unbound-slots*
+                                   (jzon:write-properties writer it 'null)))))))))
+
+(defun encode (object &optional (stream *standard-output*))
+  "Write OBJECT as JSON to STREAM and return OBJECT."
+  (jzon:with-writer (writer :stream stream)
+    (jzon:write-value writer object))
   object)
-

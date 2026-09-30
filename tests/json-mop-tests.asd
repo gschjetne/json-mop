@@ -36,4 +36,5 @@
                (:file "encode-decode")
                (:file "redefine-class")
                (:file "null-handling")
-               (:file "inheritance")))
+               (:file "inheritance")
+               (:file "streaming")))

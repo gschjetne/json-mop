@@ -34,7 +34,10 @@
 ;; to JSON-TYPE-ERROR
 (define-condition json-type-error (error)
   ((json-type :initarg :json-type
-              :reader json-type)))
+              :reader json-type))
+  (:report (lambda (condition stream)
+             (format stream "JSON value does not match JSON type ~S"
+                     (json-type condition)))))
 
 (define-condition null-value (json-type-error) ())
 
@@ -44,12 +47,15 @@
                      (json-type condition)))))
 
 (define-condition no-values-parsed (warning)
+  ;; HASH-TABLE is the input hash table, or NIL when the object was
+  ;; read from JSON text.
   ((hash-table :initarg :hash-table
+               :initform nil
                :reader no-values-hash-table)
    (class-name :initarg :class-name
                :reader no-values-class))
   (:report (lambda (condition stream)
-             (format stream "No keys corresponding to slots in ~A found in ~A"
+             (format stream "No keys corresponding to slots in ~A found~@[ in ~A~]"
                      (no-values-class condition)
                      (no-values-hash-table condition)))))
 

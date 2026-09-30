@@ -52,14 +52,17 @@ jobs:
           # Experimental entries (add `experimental: true`) report
           # their result without failing the run.
 
+          # CLISP was left out while the library used Yason, whose
+          # output stream lacks STREAM-LINE-COLUMN on CLISP; see
+          # whether it works with jzon.
+          - { lisp: clisp,          os: ubuntu-latest, experimental: true }
+
           # Deliberately not tested:
           # - windows-latest: Roswell's install-for-ci.sh calls pacman
           #   and fails; the library has no OS-specific code, so SBCL
           #   on Linux and macOS is representative.
           # - clasp-bin: Roswell's binary needs libLLVM-13, absent on
           #   ubuntu-latest.
-          # - clisp: Yason's output stream lacks STREAM-LINE-COLUMN on
-          #   CLISP, so encoding fails inside the dependency.
     steps:
     - uses: actions/checkout@v4
 

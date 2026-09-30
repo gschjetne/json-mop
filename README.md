@@ -8,8 +8,10 @@
 
 JSON-MOP is a small library aiming to cut down time spent moving data
 between CLOS and JSON objects. It depends on
-[YASON](https://github.com/hanshuebner/yason) and it should be
-possible to use it alongside straight calls to functions from YASON.
+[jzon](https://github.com/Zulu-Inuoe/jzon) and can be used alongside
+straight calls to functions from jzon: objects of JSON-MOP classes can
+be written with `jzon:stringify` or `jzon:write-value`, and hash
+tables returned by `jzon:parse` can be passed to `json-to-clos`.
 
 ## Quick Start
 
@@ -46,16 +48,48 @@ JSON `null` is treated as an unbound slot in CLOS. Unbound slots are
 ignored when encoding objects, unless `*encode-unbound-slots*` is
 bound to `T`, in which case they are represented as JSON `null`.
 
+A `null` inside a homogeneous `:list` or `:vector` signals
+`null-in-homogeneous-sequence`, with a `use-value` restart to put
+another value in its place. A `null` value inside a homogeneous
+`:hash-table` instead leaves the whole slot unbound.
+
 Slots bound to `NIL` with JSON types other `:bool` will signal an
 error, but this may change in the future.
 
+Values of type `:any`, and the contents of `:hash-table`, `:vector`
+and `:list` values, follow jzon's conventions: `true` and `false` are
+`T` and `NIL`, `null` is the symbol `NULL`, arrays are simple vectors,
+objects are `EQUAL` hash tables, and non-integer numbers are
+`DOUBLE-FLOAT`s. Hash tables passed to `json-to-clos` must follow the
+same conventions, as those returned by `jzon:parse` do.
+
 ### Encoding and decoding JSON
 
-Turning an object into JSON is done with the `yason:encode` generic
-function. Turning it back into an object is slightly more involved,
-using `json-to-clos` on a stream, string or hash table; a class name;
-and optional initargs for the class. Values decoded from the JSON will
-override values specified in the initargs.
+Turning an object into JSON is done with the `encode` function, which
+takes the object and an optional output stream. Turning it back into
+an object is slightly more involved, using `json-to-clos` on a stream,
+string, pathname or hash table; a class name; and optional initargs
+for the class. Values decoded from the JSON will override values
+specified in the initargs.
+
+When decoding JSON text, objects are created and their slots set as
+the values are read, without building an intermediate hash table for
+each object. Values of keys with no corresponding slot are skipped.
+
+### Upgrading from YASON
+
+Earlier versions were built on YASON. Since switching to jzon:
+
+YASON                                          | jzon
+-----------------------------------------------|---------------------------------------------
+`yason:true` and `yason:false`                 | `T` and `NIL`
+`:null`                                        | the symbol `NULL`
+`encode` is the generic function `yason:encode` | `encode` is a function; specialise `jzon:write-value` to extend encoding
+non-integers as read by YASON                  | non-integers are `DOUBLE-FLOAT`s
+non-object input fails with no applicable method | non-object input signals `json-type-error`
+
+Code that specialised `yason:encode`, or that passes `json-to-clos`
+hash tables built with YASON's conventions, needs updating.
 
 ### Example
 
